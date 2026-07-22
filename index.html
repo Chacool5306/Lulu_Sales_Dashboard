@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<!--
+============================================================================
+  Lulu Q2 2026 그루밍 카테고리 반응형 대시보드 (DORCO 관점)
+============================================================================
+  배포 방법:
+  1) 이 엑셀 파일을 Google Sheets로 업로드합니다.
+     (Google Drive > 새로 만들기 > 파일 업로드 > 업로드한 파일을 Google Sheets로 열기)
+  2) 시트를 웹에 공개합니다:
+       - 우측 상단 [공유] > "링크가 있는 모든 사용자 - 뷰어" 로 설정
+         (gviz JSON API 사용을 위해 반드시 필요)
+  3) 시트 URL 에서 SHEET_ID 를 복사합니다.
+       https://docs.google.com/spreadsheets/d/[여기가 SHEET_ID]/edit
+     복사한 값을 아래 CONFIG.SHEET_ID 에 붙여넣습니다.
+  4) 이 index.html 을 GitHub 저장소에 업로드 후 Vercel(또는 GitHub Pages)로 배포합니다.
+
+  ※ SHEET_ID 를 설정하지 않으면 내장된 샘플 데이터로 미리보기됩니다.
+  ※ 탭 이름(KPI, Category, Brand, SubCategory, Gender, Outlet, Product)은
+     엑셀 탭 이름과 정확히 일치해야 합니다.
+============================================================================
+-->
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lulu Q2 2026 그루밍 대시보드</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --txt:#e2e8f0; --muted:#94a3b8; --accent:#38bdf8; --accent2:#818cf8;
+    --pos:#34d399; --neg:#f87171; --card:#1e293b;
+    --sidebar-w:240px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+       background:var(--bg);color:var(--txt);}
+  #sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;
+           background:linear-gradient(180deg,#111827,#0f172a);border-right:1px solid var(--line);
+           padding:20px 0;overflow-y:auto;transition:transform .25s ease;z-index:50;}
+  #sidebar h1{font-size:15px;padding:0 20px 4px;margin:0;color:#fff;letter-spacing:.5px;}
+  #sidebar .sub{font-size:11px;color:var(--muted);padding:0 20px 18px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+  .navbtn{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;
+          color:var(--muted);text-align:left;padding:12px 20px;font-size:14px;cursor:pointer;transition:.15s;}
+  .navbtn:hover{background:var(--panel2);color:var(--txt);}
+  .navbtn.active{background:var(--panel2);color:#fff;border-left:3px solid var(--accent);padding-left:17px;}
+  .navbtn .ic{font-size:16px;width:20px;text-align:center;}
+  #main{margin-left:var(--sidebar-w);padding:0;min-height:100vh;}
+  #topbar{position:sticky;top:0;background:rgba(15,23,42,.92);backdrop-filter:blur(6px);
+          border-bottom:1px solid var(--line);padding:16px 28px;display:flex;
+          align-items:center;justify-content:space-between;z-index:40;}
+  #topbar .title{font-size:20px;font-weight:600;}
+  #topbar .right{display:flex;align-items:center;gap:12px;}
+  #hamb{display:none;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+        font-size:18px;padding:6px 12px;border-radius:8px;cursor:pointer;}
+  #refresh{background:var(--accent);border:0;color:#04202e;font-weight:600;padding:8px 16px;
+           border-radius:8px;cursor:pointer;font-size:13px;}
+  #refresh:hover{filter:brightness(1.08);}
+  #status{font-size:12px;color:var(--muted);}
+  .content{padding:24px 28px 60px;}
+  .view{display:none;animation:fade .3s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;}
+  .card .lbl{font-size:13px;color:var(--muted);margin-bottom:8px;}
+  .card .val{font-size:24px;font-weight:700;color:#fff;}
+  .card .val.small{font-size:18px;}
+  .card .sub{font-size:12px;margin-top:6px;color:var(--muted);}
+  .pos{color:var(--pos)!important;} .neg{color:var(--neg)!important;}
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-bottom:24px;}
+  .chart-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;}
+  .chart-box h3{margin:0 0 14px;font-size:14px;color:var(--txt);font-weight:600;}
+  .chart-canvas-wrap{position:relative;height:300px;}
+  .tbl-tools{display:flex;gap:12px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+  .tbl-tools input{background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+                   padding:8px 12px;border-radius:8px;font-size:13px;min-width:220px;}
+  .tbl-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:640px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:10px 14px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);}
+  th:first-child,td:first-child{text-align:left;}
+  th{position:sticky;top:0;background:var(--panel2);color:var(--txt);font-weight:600;cursor:pointer;user-select:none;z-index:1;}
+  th:hover{color:var(--accent);}
+  tbody tr:hover{background:var(--panel2);}
+  tr.total-row{background:#0b3b4d;font-weight:700;}
+  tr.total-row:hover{background:#0b3b4d;}
+  .loading{padding:40px;text-align:center;color:var(--muted);}
+  .banner{background:#422006;border:1px solid #92400e;color:#fbbf24;padding:10px 16px;
+          border-radius:10px;font-size:13px;margin-bottom:18px;}
+  @media(max-width:860px){
+    #sidebar{transform:translateX(-100%);}
+    #sidebar.open{transform:translateX(0);}
+    #main{margin-left:0;}
+    #hamb{display:block;}
+  }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <h1>DORCO · Lulu 대시보드</h1>
+  <div class="sub">Q2 2026 그루밍 카테고리 분석</div>
+  <button class="navbtn active" data-view="kpi"><span class="ic">📊</span>개요</button>
+  <button class="navbtn" data-view="category"><span class="ic">🗂️</span>카테고리</button>
+  <button class="navbtn" data-view="brand"><span class="ic">🏷️</span>브랜드</button>
+  <button class="navbtn" data-view="subcategory"><span class="ic">📑</span>세부 카테고리</button>
+  <button class="navbtn" data-view="gender"><span class="ic">🚻</span>성별</button>
+  <button class="navbtn" data-view="outlet"><span class="ic">🏬</span>매장</button>
+  <button class="navbtn" data-view="product"><span class="ic">🪒</span>제품(SLEEK)</button>
+</nav>
+
+<div id="main">
+  <div id="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button id="hamb">☰</button>
+      <div class="title" id="viewTitle">개요</div>
+    </div>
+    <div class="right">
+      <span id="status">준비 중…</span>
+      <button id="refresh">↻ 새로고침</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div id="dataBanner"></div>
+
+    <section id="view-kpi" class="view active">
+      <div class="cards" id="kpiCards"><div class="loading">불러오는 중…</div></div>
+      <div class="chart-grid">
+        <div class="chart-box"><h3>분기별 총매출 (Q1 → Q2 2026)</h3><div class="chart-canvas-wrap"><canvas id="ch_kpi_q"></canvas></div></div>
+        <div class="chart-box"><h3>반기별 총매출 (H1 2025 → 2026)</h3><div class="chart-canvas-wrap"><canvas id="ch_kpi_h"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="view-category" class="view">
+      <div class="chart-grid">
+        <div class="chart-box"><h3>카테고리별 Q1 vs Q2 2026 매출</h3><div class="chart-canvas-wrap"><canvas id="ch_cat_bar"></canvas></div></div>
+        <div class="chart-box"><h3>Q2 2026 매출 기여도</h3><div class="chart-canvas-wrap"><canvas id="ch_cat_dough"></canvas></div></div>
+      </div>
+      <div class="tbl-tools"><input type="text" data-tbl="category" placeholder="🔍 검색…"></div>
+      <div class="tbl-wrap"><table id="tbl-category"></table></div>
+    </section>
+
+    <section id="view-brand" class="view">
+      <div class="chart-grid">
+        <div class="chart-box"><h3>브랜드별 Q2 2026 매출 (Top 10)</h3><div class="chart-canvas-wrap"><canvas id="ch_brand_bar"></canvas></div></div>
+        <div class="chart-box"><h3>브랜드 매출 기여도 (Top 8)</h3><div class="chart-canvas-wrap"><canvas id="ch_brand_dough"></canvas></div></div>
+      </div>
+      <div class="tbl-tools"><input type="text" data-tbl="brand" placeholder="🔍 브랜드 검색…"></div>
+      <div class="tbl-wrap"><table id="tbl-brand"></table></div>
+    </section>
+
+    <section id="view-subcategory" class="view">
+      <div class="chart-grid">
+        <div class="chart-box" style="grid-column:1/-1;"><h3>세부 카테고리 × 브랜드 Q2 2026 매출 (Top 15)</h3><div class="chart-canvas-wrap" style="height:380px;"><canvas id="ch_sub_bar"></canvas></div></div>
+      </div>
+      <div class="tbl-tools"><input type="text" data-tbl="subcategory" placeholder="🔍 카테고리/브랜드 검색…"></div>
+      <div class="tbl-wrap"><table id="tbl-subcategory"></table></div>
+    </section>
+
+    <section id="view-gender" class="view">
+      <div class="chart-grid">
+        <div class="chart-box"><h3>브랜드별 남/여 매출 구성</h3><div class="chart-canvas-wrap"><canvas id="ch_gender_bar"></canvas></div></div>
+        <div class="chart-box"><h3>전체 성별 비중</h3><div class="chart-canvas-wrap"><canvas id="ch_gender_dough"></canvas></div></div>
+      </div>
+      <div class="tbl-tools"><input type="text" data-tbl="gender" placeholder="🔍 브랜드 검색…"></div>
+      <div class="tbl-wrap"><table id="tbl-gender"></table></div>
+    </section>
+
+    <section id="view-outlet" class="view">
+      <div class="cards" id="outletCards"></div>
+      <div class="chart-grid">
+        <div class="chart-box" style="grid-column:1/-1;"><h3>매장별 Q2 2026 매출 (Top 15)</h3><div class="chart-canvas-wrap" style="height:380px;"><canvas id="ch_outlet_bar"></canvas></div></div>
+      </div>
+      <div class="tbl-tools"><input type="text" data-tbl="outlet" placeholder="🔍 매장 검색…"></div>
+      <div class="tbl-wrap"><table id="tbl-outlet"></table></div>
+    </section>
+
+    <section id="view-product" class="view">
+      <div class="chart-grid">
+        <div class="chart-box"><h3>SLEEK 제품별 Q1 vs Q2 2026</h3><div class="chart-canvas-wrap"><canvas id="ch_prod_bar"></canvas></div></div>
+        <div class="chart-box"><h3>SLEEK 제품별 QoQ 성장률</h3><div class="chart-canvas-wrap"><canvas id="ch_prod_growth"></canvas></div></div>
+      </div>
+      <div class="tbl-tools"><input type="text" data-tbl="product" placeholder="🔍 제품 검색…"></div>
+      <div class="tbl-wrap"><table id="tbl-product"></table></div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* ====================== CONFIG ====================== */
+const CONFIG = {
+  // ↓↓↓ Google Sheets 업로드 후 시트 ID 를 여기에 붙여넣으세요 ↓↓↓
+  SHEET_ID: "1zN2hVxqJRMdLnWHjY9JdIGAARP3ojmInbCVPeSce1vA",
+  SHEETS: ["KPI","Category","Brand","SubCategory","Gender","Outlet","Product"]
+};
+
+const VIEW_LABEL = {kpi:"개요",category:"카테고리",brand:"브랜드",
+  subcategory:"세부 카테고리",gender:"성별",outlet:"매장",product:"제품(SLEEK)"};
+
+const store = {};
+const charts = {};
+
+const isPercentCol = (h)=>/성장률|비율|기여도/.test(h||"");
+const isTextCol = (h)=>/카테고리|브랜드|매장|제품|지표|구분/.test(h||"");
+const num = (v)=> (v===null||v===undefined||v==="") ? null : (typeof v==="number"? v : parseFloat(String(v).replace(/,/g,"")));
+
+function fmt(val,header){
+  if(val===null||val===undefined||val==="") return "";
+  if(isPercentCol(header)){
+    const n = num(val); if(n===null||isNaN(n)) return "";
+    return (n*100).toFixed(1)+"%";
+  }
+  if(typeof val==="number" || (!isTextCol(header) && !isNaN(num(val)))){
+    const n = num(val); if(n===null||isNaN(n)) return String(val);
+    return n.toLocaleString("ko-KR",{maximumFractionDigits:0});
+  }
+  return String(val);
+}
+function cellClass(val,header){
+  if(isPercentCol(header) && /성장/.test(header)){
+    const n=num(val); if(n===null||isNaN(n)) return "";
+    return n>0?"pos":(n<0?"neg":"");
+  }
+  return "";
+}
+const CHART_COLORS = ["#38bdf8","#818cf8","#34d399","#fbbf24","#f87171","#f472b6","#a78bfa","#2dd4bf","#fb923c","#60a5fa","#c084fc","#4ade80","#facc15","#fca5a5","#e879f9"];
+
+async function fetchSheet(name){
+  const url = `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(name)}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}")+1));
+  const cols = json.table.cols.map((c,i)=> c.label || (json.table.rows[0]&&json.table.rows[0].c[i]?String(json.table.rows[0].c[i].v):`col${i}`));
+  const rows = json.table.rows.map(r=> r.c.map(cell=> cell? cell.v : null));
+  return {cols, rows};
+}
+
+async function loadAll(){
+  const status = document.getElementById("status");
+  const banner = document.getElementById("dataBanner");
+  if(!CONFIG.SHEET_ID){
+    banner.innerHTML = '<div class="banner">⚠ SHEET_ID 가 설정되지 않아 <b>샘플 데이터</b>로 미리보기 중입니다. 코드 상단 CONFIG.SHEET_ID 를 설정하면 실시간 데이터로 전환됩니다.</div>';
+    Object.assign(store, SAMPLE);
+    status.textContent = "샘플 데이터";
+    renderAll();
+    return;
+  }
+  banner.innerHTML = "";
+  status.textContent = "불러오는 중…";
+  try{
+    const results = await Promise.all(CONFIG.SHEETS.map(fetchSheet));
+    CONFIG.SHEETS.forEach((n,i)=> store[n]=results[i]);
+    status.textContent = "업데이트: "+new Date().toLocaleTimeString("ko-KR");
+    renderAll();
+  }catch(e){
+    console.error(e);
+    banner.innerHTML = '<div class="banner">❌ 데이터를 불러오지 못했습니다. 시트 공개 설정(링크가 있는 모든 사용자-뷰어)과 SHEET_ID, 탭 이름을 확인하세요. 샘플 데이터로 표시합니다.</div>';
+    Object.assign(store, SAMPLE);
+    status.textContent = "샘플 데이터(로드 실패)";
+    renderAll();
+  }
+}
+
+function renderAll(){
+  renderKPI();
+  renderTable("Category","category",true);
+  renderTable("Brand","brand",true);
+  renderTable("SubCategory","subcategory",false);
+  renderTable("Gender","gender",true);
+  renderTable("Outlet","outlet",true);
+  renderTable("Product","product",true);
+  renderCategoryCharts();
+  renderBrandCharts();
+  renderSubCharts();
+  renderGenderCharts();
+  renderOutlet();
+  renderProductCharts();
+}
+
+function renderKPI(){
+  const d = store["KPI"]; if(!d) return;
+  const map = {};
+  d.rows.forEach(r=> map[r[0]] = r[1]);
+  const wrap = document.getElementById("kpiCards");
+  const growthCard=(lbl,v)=>{
+    const n=num(v); const cls=n>0?"pos":(n<0?"neg":"");
+    return `<div class="card"><div class="lbl">${lbl}</div><div class="val ${cls}">${n>0?"▲":n<0?"▼":""} ${(n*100).toFixed(1)}%</div></div>`;
+  };
+  const moneyCard=(lbl,v,sub)=>`<div class="card"><div class="lbl">${lbl}</div><div class="val">${fmt(v,"매출")}</div>${sub?`<div class="sub">${sub}</div>`:""}</div>`;
+  const textCard=(lbl,v)=>`<div class="card"><div class="lbl">${lbl}</div><div class="val small">${v??""}</div></div>`;
+  let html="";
+  html+=moneyCard("Q2 2026 총매출", map["Q2 2026 총매출"]);
+  html+=moneyCard("Q1 2026 총매출", map["Q1 2026 총매출"]);
+  html+=growthCard("QoQ 성장률 (Q1→Q2)", map["QoQ 성장률 (Q1→Q2)"]);
+  html+=growthCard("YoY 성장률 (H1)", map["YoY 성장률 (H1)"]);
+  html+=moneyCard("H1 2026 총매출", map["H1 2026 총매출"]);
+  html+=moneyCard("H1 2025 총매출", map["H1 2025 총매출"]);
+  html+=textCard("최대 매출 브랜드", map["최대 매출 브랜드"]);
+  html+=textCard("최대 매출 카테고리", map["최대 매출 카테고리"]);
+  html+=moneyCard("DORCO Q2 2026 매출", map["DORCO Q2 2026 매출"]);
+  html+=growthCard("DORCO QoQ 성장률", map["DORCO QoQ 성장률"]);
+  html+=textCard("DORCO 매출 순위", (map["DORCO 매출 순위"]!=null? map["DORCO 매출 순위"]+"위":""));
+  wrap.innerHTML = html;
+
+  drawChart("ch_kpi_q","bar",{
+    labels:["Q1 2026","Q2 2026"],
+    datasets:[{label:"총매출",data:[num(map["Q1 2026 총매출"]),num(map["Q2 2026 총매출"])],backgroundColor:[CHART_COLORS[1],CHART_COLORS[0]]}]
+  },{plugins:{legend:{display:false}}});
+  drawChart("ch_kpi_h","bar",{
+    labels:["H1 2025","H1 2026"],
+    datasets:[{label:"총매출",data:[num(map["H1 2025 총매출"]),num(map["H1 2026 총매출"])],backgroundColor:[CHART_COLORS[4],CHART_COLORS[2]]}]
+  },{plugins:{legend:{display:false}}});
+}
+
+function renderTable(sheet,key,hasTotal){
+  const d = store[sheet]; if(!d) return;
+  const tbl = document.getElementById("tbl-"+key);
+  const thead = "<thead><tr>"+d.cols.map((c,i)=>`<th data-ci="${i}">${c}</th>`).join("")+"</tr></thead>";
+  let rows = d.rows.slice();
+  const tbody = "<tbody>"+rows.map(r=>{
+    const isTot = hasTotal && /Grand Total|총계|합계/i.test(String(r[0]));
+    return `<tr class="${isTot?'total-row':''}">`+r.map((v,i)=>`<td class="${cellClass(v,d.cols[i])}">${fmt(v,d.cols[i])}</td>`).join("")+"</tr>";
+  }).join("")+"</tbody>";
+  tbl.innerHTML = thead+tbody;
+  attachSort(tbl,d);
+}
+function attachSort(tbl,d){
+  tbl.querySelectorAll("th").forEach(th=>{
+    th.onclick=()=>{
+      const ci=+th.dataset.ci;
+      const asc = th.dataset.asc!=="1"; th.dataset.asc=asc?"1":"0";
+      const tb=tbl.querySelector("tbody");
+      const trs=[...tb.querySelectorAll("tr")].filter(t=>!t.classList.contains("total-row"));
+      const tot=[...tb.querySelectorAll("tr.total-row")];
+      trs.sort((a,b)=>{
+        let x=a.children[ci].textContent.replace(/[%,]/g,""), y=b.children[ci].textContent.replace(/[%,]/g,"");
+        const nx=parseFloat(x),ny=parseFloat(y);
+        if(!isNaN(nx)&&!isNaN(ny)) return asc?nx-ny:ny-nx;
+        return asc? x.localeCompare(y,"ko"):y.localeCompare(x,"ko");
+      });
+      tb.innerHTML=""; trs.forEach(t=>tb.appendChild(t)); tot.forEach(t=>tb.appendChild(t));
+    };
+  });
+}
+document.addEventListener("input",e=>{
+  if(e.target.matches("input[data-tbl]")){
+    const key=e.target.dataset.tbl, q=e.target.value.toLowerCase();
+    document.querySelectorAll(`#tbl-${key} tbody tr`).forEach(tr=>{
+      tr.style.display = tr.textContent.toLowerCase().includes(q)?"":"none";
+    });
+  }
+});
+
+function dataRows(sheet){
+  const d=store[sheet]; if(!d) return [];
+  return d.rows.filter(r=>!/Grand Total|총계|합계/i.test(String(r[0])));
+}
+function renderCategoryCharts(){
+  const d=store["Category"]; if(!d) return;
+  const rows=dataRows("Category");
+  const ci=(name)=>d.cols.indexOf(name);
+  const labels=rows.map(r=>r[0]);
+  drawChart("ch_cat_bar","bar",{
+    labels,
+    datasets:[
+      {label:"Q1 2026",data:rows.map(r=>num(r[ci("Q1 2026")])),backgroundColor:CHART_COLORS[1]},
+      {label:"Q2 2026",data:rows.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS[0]}
+    ]});
+  drawChart("ch_cat_dough","doughnut",{
+    labels,
+    datasets:[{data:rows.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS}]
+  },{plugins:{legend:{position:"right",labels:{color:"#cbd5e1",font:{size:11}}}}});
+}
+function renderBrandCharts(){
+  const d=store["Brand"]; if(!d) return;
+  const rows=dataRows("Brand");
+  const ci=(name)=>d.cols.indexOf(name);
+  const sorted=[...rows].sort((a,b)=>num(b[ci("Q2 2026")])-num(a[ci("Q2 2026")]));
+  const top10=sorted.slice(0,10);
+  drawChart("ch_brand_bar","bar",{
+    labels:top10.map(r=>r[0]),
+    datasets:[{label:"Q2 2026 매출",data:top10.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS[0]}]
+  },{indexAxis:"y",plugins:{legend:{display:false}}});
+  const top8=sorted.slice(0,8);
+  drawChart("ch_brand_dough","doughnut",{
+    labels:top8.map(r=>r[0]),
+    datasets:[{data:top8.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS}]
+  },{plugins:{legend:{position:"right",labels:{color:"#cbd5e1",font:{size:11}}}}});
+}
+function renderSubCharts(){
+  const d=store["SubCategory"]; if(!d) return;
+  const rows=dataRows("SubCategory");
+  const ci=(name)=>d.cols.indexOf(name);
+  const sorted=[...rows].sort((a,b)=>num(b[ci("Q2 2026")])-num(a[ci("Q2 2026")])).slice(0,15);
+  drawChart("ch_sub_bar","bar",{
+    labels:sorted.map(r=>`${r[1]} · ${r[0]}`),
+    datasets:[{label:"Q2 2026 매출",data:sorted.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS[2]}]
+  },{indexAxis:"y",plugins:{legend:{display:false}}});
+}
+function renderGenderCharts(){
+  const d=store["Gender"]; if(!d) return;
+  const rows=dataRows("Gender");
+  const ci=(name)=>d.cols.indexOf(name);
+  drawChart("ch_gender_bar","bar",{
+    labels:rows.map(r=>r[0]),
+    datasets:[
+      {label:"남성",data:rows.map(r=>num(r[ci("남성")])),backgroundColor:CHART_COLORS[0]},
+      {label:"여성",data:rows.map(r=>num(r[ci("여성")])),backgroundColor:CHART_COLORS[5]}
+    ]},{plugins:{legend:{labels:{color:"#cbd5e1"}}},scales:{x:{stacked:true},y:{stacked:true}}});
+  const tot=store["Gender"].rows.find(r=>/Grand Total|총계|합계/i.test(String(r[0])));
+  if(tot){
+    drawChart("ch_gender_dough","doughnut",{
+      labels:["남성","여성"],
+      datasets:[{data:[num(tot[ci("남성")]),num(tot[ci("여성")])],backgroundColor:[CHART_COLORS[0],CHART_COLORS[5]]}]
+    },{plugins:{legend:{position:"bottom",labels:{color:"#cbd5e1"}}}});
+  }
+}
+function renderOutlet(){
+  const d=store["Outlet"]; if(!d) return;
+  const ci=(name)=>d.cols.indexOf(name);
+  const rows=dataRows("Outlet");
+  const tot=d.rows.find(r=>/Grand Total|총계|합계/i.test(String(r[0])));
+  const cw=document.getElementById("outletCards");
+  if(tot){
+    const g=num(tot[ci("성장률")]);
+    cw.innerHTML =
+      `<div class="card"><div class="lbl">매장 수</div><div class="val">${rows.length.toLocaleString("ko-KR")}</div></div>`+
+      `<div class="card"><div class="lbl">Q2 2026 총매출</div><div class="val">${fmt(tot[ci("Q2 2026")],"매출")}</div></div>`+
+      `<div class="card"><div class="lbl">Q2 2025 총매출</div><div class="val">${fmt(tot[ci("Q2 2025")],"매출")}</div></div>`+
+      `<div class="card"><div class="lbl">전년比 성장률</div><div class="val ${g>0?'pos':'neg'}">${g>0?"▲":"▼"} ${(g*100).toFixed(1)}%</div></div>`;
+  }
+  const sorted=[...rows].sort((a,b)=>num(b[ci("Q2 2026")])-num(a[ci("Q2 2026")])).slice(0,15);
+  drawChart("ch_outlet_bar","bar",{
+    labels:sorted.map(r=>r[0]),
+    datasets:[
+      {label:"Q2 2025",data:sorted.map(r=>num(r[ci("Q2 2025")])),backgroundColor:CHART_COLORS[4]},
+      {label:"Q2 2026",data:sorted.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS[0]}
+    ]},{indexAxis:"y",plugins:{legend:{labels:{color:"#cbd5e1"}}}});
+}
+function renderProductCharts(){
+  const d=store["Product"]; if(!d) return;
+  const ci=(name)=>d.cols.indexOf(name);
+  const rows=dataRows("Product");
+  drawChart("ch_prod_bar","bar",{
+    labels:rows.map(r=>r[0]),
+    datasets:[
+      {label:"Q1 2026",data:rows.map(r=>num(r[ci("Q1 2026")])),backgroundColor:CHART_COLORS[1]},
+      {label:"Q2 2026",data:rows.map(r=>num(r[ci("Q2 2026")])),backgroundColor:CHART_COLORS[0]}
+    ]},{plugins:{legend:{labels:{color:"#cbd5e1"}}}});
+  drawChart("ch_prod_growth","bar",{
+    labels:rows.map(r=>r[0]),
+    datasets:[{label:"QoQ 성장률",data:rows.map(r=>num(r[ci("성장률")])*100),
+      backgroundColor:rows.map(r=>num(r[ci("성장률")])>=0?CHART_COLORS[2]:CHART_COLORS[4])}]
+  },{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y.toFixed(1)+"%"}}},
+     scales:{y:{ticks:{callback:v=>v+"%"}}}});
+}
+
+Chart.defaults.color = "#94a3b8";
+Chart.defaults.borderColor = "#334155";
+function drawChart(id,type,data,opts){
+  const el=document.getElementById(id); if(!el) return;
+  if(charts[id]) charts[id].destroy();
+  const base={responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{color:"#cbd5e1"}}},
+    scales:(type==="doughnut"||type==="pie")?{}:{
+      x:{grid:{color:"#293548"},ticks:{color:"#94a3b8"}},
+      y:{grid:{color:"#293548"},ticks:{color:"#94a3b8"}}}};
+  charts[id]=new Chart(el,{type,data,options:Object.assign(base,opts||{},{
+    plugins:Object.assign({},base.plugins,(opts&&opts.plugins)||{}),
+    scales:Object.assign({},base.scales,(opts&&opts.scales)||{})
+  })});
+}
+
+document.querySelectorAll(".navbtn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".navbtn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const v=btn.dataset.view;
+    document.querySelectorAll(".view").forEach(s=>s.classList.remove("active"));
+    document.getElementById("view-"+v).classList.add("active");
+    document.getElementById("viewTitle").textContent = VIEW_LABEL[v];
+    document.getElementById("sidebar").classList.remove("open");
+    window.scrollTo(0,0);
+  };
+});
+document.getElementById("hamb").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
+document.getElementById("refresh").onclick=loadAll;
+
+const SAMPLE = {
+  KPI:{cols:["지표","값","구분"],rows:[
+    ["Q2 2026 총매출",1679920,"매출액"],["Q1 2026 총매출",1689259,"매출액"],
+    ["QoQ 성장률 (Q1→Q2)",-0.0055,"성장률"],["Q2 2025 총매출",1822323,"매출액"],
+    ["H1 2026 총매출",3369180,"매출액"],["H1 2025 총매출",3546670,"매출액"],
+    ["YoY 성장률 (H1)",-0.0500,"성장률"],["최대 매출 브랜드","P&G GILLETTE","브랜드"],
+    ["최대 매출 카테고리","Ladies Shavers (System+Dispo)","카테고리"],
+    ["DORCO Q2 2026 매출",166730,"매출액"],["DORCO QoQ 성장률",-0.0295,"성장률"],
+    ["DORCO 매출 순위",3,"순위"]]},
+  Category:{cols:["카테고리","Q1 2026","Q2 2026","QoQ 성장률","Q2 2025","Q2 YoY 성장률","H1 2026","H1 2025","H1 YoY 성장률","기여도"],rows:[
+    ["Ladies Shavers (System+Dispo)",597416,616182,0.0314,644483,-0.0439,1213599,1196452,0.0143,0.3602],
+    ["Razor Disposable",583766,585438,0.0029,624775,-0.0630,1169204,1218925,-0.0408,0.3470],
+    ["System Blades",220728,205005,-0.0712,233705,-0.1228,425733,462965,-0.0804,0.1264],
+    ["Razor Systems",187731,179344,-0.0447,214591,-0.1643,367075,462692,-0.2067,0.1090],
+    ["Eye Care(Eyebrow Razor)",99618,93951,-0.0569,104769,-0.1033,193569,205635,-0.0587,0.0575],
+    ["Grand Total",1689259,1679920,-0.0055,1822323,-0.0781,3369180,3546670,-0.0500,1]]},
+  Brand:{cols:["브랜드","Q1 2026","Q2 2026","QoQ 성장률","Q2 2025","Q2 YoY 성장률","H1 2026","H1 2025","H1 YoY 성장률","기여도"],rows:[
+    ["P&G GILLETTE",621484,588515,-0.0530,684506,-0.1402,1209999,1400475,-0.1360,0.3591],
+    ["P&G GILLETTE VENUS",336215,335234,-0.0029,342669,-0.0217,671449,652138,0.0296,0.1993],
+    ["DORCO",171794,166730,-0.0295,188667,-0.1163,338524,334596,0.0117,0.1005],
+    ["LASER",160828,161357,0.0033,162969,-0.0099,322185,299917,0.0742,0.0956],
+    ["SCHICK",158130,159314,0.0075,195403,-0.1847,317444,352116,-0.0985,0.0942],
+    ["BIC",66675,88561,0.3282,91394,-0.0310,155236,195927,-0.2077,0.0461],
+    ["FEATHER",65414,66627,0.0186,63234,0.0537,132041,129652,0.0184,0.0392],
+    ["Grand Total",1689259,1679920,-0.0055,1822323,-0.0781,3369180,3546670,-0.0500,1]]},
+  SubCategory:{cols:["카테고리","브랜드","Q1 2026","Q2 2026","QoQ 성장률","Q2 2025","Q2 YoY 성장률","H1 2026","H1 2025","H1 YoY 성장률"],rows:[
+    ["RAZOR DISPOSABLE","P&G GILLETTE",255449,245689,-0.0382,287291,-0.1448,501138,570408,-0.1214],
+    ["RAZOR DISPOSABLE","LASER",127838,129593,0.0137,127071,0.0198,257431,237299,0.0848],
+    ["RAZOR DISPOSABLE","DORCO",86152,83445,-0.0314,90136,-0.0742,169597,167237,0.0141],
+    ["SYSTEM BLADES","P&G GILLETTE",120000,110000,-0.083,130000,-0.153,230000,250000,-0.08],
+    ["LADIES SHAVERS","SCHICK",90000,95000,0.055,88000,0.079,185000,175000,0.057]]},
+  Gender:{cols:["브랜드","남성","여성","합계","남성 비율","여성 비율"],rows:[
+    ["P&G GILLETTE / P&G GILLETTE VENUS",1209999,671449,1881448,0.6431,0.3569],
+    ["DORCO",215857,122668,338524,0.6376,0.3624],
+    ["LASER",257431,64754,322185,0.7990,0.2010],
+    ["SCHICK",92616,224828,317444,0.2918,0.7082],
+    ["BIC",51527,103709,155236,0.3319,0.6681],
+    ["Grand Total",1960345,1408834,3369180,0.5818,0.4182]]},
+  Outlet:{cols:["매장","Q2 2025","Q2 2026","성장률"],rows:[
+    ["LH Buteena, Sharjah",1073,942,-0.1225],
+    ["LH Dubai Silicon Oasis, DXB",3606,2157,-0.4016],
+    ["LH Muweilah, SHJ",1503,1782,0.1858],
+    ["LuLu Village, Muhaisnah - DXB",5109,3495,-0.3158],
+    ["Grand Total",188667,166730,-0.1163]]},
+  Product:{cols:["제품 (SLEEK)","Q1 2026","Q2 2026","성장률","H1 합계"],rows:[
+    ["Dorco Sleek Cartridge 4pc",1346,2432,0.8060,3778],
+    ["Dorco Sleek MultiFlex 1Rzr+2Ctg",1938,2602,0.3425,4541],
+    ["Dorco Sleek MultiFlex 1Rzr+6Ctg",2254,2104,-0.0663,4358],
+    ["Grand Total",5539,7138,0.2888,12677]]}
+};
+
+loadAll();
+</script>
+</body>
+</html>
