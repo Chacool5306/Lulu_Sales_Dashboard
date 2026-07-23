@@ -749,7 +749,9 @@ const dorcoRank =
   ) + 1;
 
   const topBrand =
-    sortedBrands.length ? sortedBrands[0][0] : safe(getFromKpi("최대 매출 브랜드"), "-");
+  executiveBrandRows.length
+    ? executiveBrandRows[0].brand
+    : safe(getFromKpi("최대 매출 브랜드"), "-");
 
   const topCategory =
     sortedCategories.length ? sortedCategories[0][0] : safe(getFromKpi("최대 매출 카테고리"), "-");
