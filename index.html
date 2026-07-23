@@ -1280,8 +1280,32 @@ Chart.defaults.borderColor = "#334155";
 function drawChart(id,type,data,opts){
   const el=document.getElementById(id); if(!el) return;
   if(charts[id]) charts[id].destroy();
-  const base={responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{labels:{color:"#cbd5e1"}}},
+  const base={
+  responsive:true,
+  maintainAspectRatio:false,
+
+  plugins:{
+
+    legend:{
+      labels:{color:"#cbd5e1"}
+    },
+
+    tooltip:{
+      callbacks:{
+        label:function(context){
+
+          const value =
+            Number(context.raw || 0);
+
+          return context.dataset.label +
+            ": " +
+            Math.round(value)
+              .toLocaleString("ko-KR");
+        }
+      }
+    }
+
+  },
     scales:(type==="doughnut"||type==="pie")?{}:{
       x:{
   grid:{color:"#293548"},
