@@ -197,7 +197,29 @@ body.locked #main {
 </style>
 </head>
 <body class="locked">
+<div id="authScreen">
+  <div id="authBox">
+    <h2>UAE Market Command Center</h2>
+    <p>
+      내부 팀원 전용 대시보드입니다.<br>
+      접근 비밀번호를 입력하세요.
+    </p>
 
+    <input
+      id="authPassword"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    />
+
+    <button id="authButton">Access Dashboard</button>
+    <div id="authError"></div>
+
+    <p style="margin-top:18px;font-size:11px;color:#64748b;">
+      ※ This dashboard is for internal monitoring only.
+    </p>
+  </div>
+</div>
 <nav id="sidebar">
   <h1>DORCO · Lulu 대시보드</h1>
   <div class="sub">Q2 2026 그루밍 카테고리 분석</div>
