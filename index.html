@@ -922,21 +922,53 @@ const dorcoRank =
     }
   });
 
-  const topBrands = sortedBrands.slice(0, 6);
+const topBrands =
+  executiveBrandRows.slice(0, 6);
 
-  drawChart("ch_exec_brand_rank", "bar", {
-    labels: topBrands.map(r => r[0]),
-    datasets: [{
-      label: "Q2 Sales",
-      data: topBrands.map(r => num(r[brandQ2Col])),
+drawChart("ch_exec_brand_rank", "bar", {
+
+  labels: topBrands.map(r => r.brand),
+
+  datasets: [
+
+    {
+      label: "Gillette Men",
+      data: topBrands.map(r =>
+        r.gillette ? r.gillette : r.total
+      ),
       backgroundColor: "#38bdf8"
-    }]
-  }, {
-    indexAxis: "y",
-    plugins: {
-      legend: { display: false }
+    },
+
+    {
+      label: "Venus",
+      data: topBrands.map(r =>
+        r.venus ? r.venus : 0
+      ),
+      backgroundColor: "#93c5fd"
     }
-  });
+
+  ]
+
+}, {
+
+  indexAxis: "y",
+
+  plugins: {
+    legend: {
+      display: true
+    }
+  },
+
+  scales: {
+    x: {
+      stacked: true
+    },
+    y: {
+      stacked: true
+    }
+  }
+
+});
 };
 
   function execRankingTable(rows, valueCol, label){
