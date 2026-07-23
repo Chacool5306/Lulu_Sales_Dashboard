@@ -1306,26 +1306,35 @@ function drawChart(id,type,data,opts){
 
   },
     scales:(type==="doughnut"||type==="pie")?{}:{
-      x:{
-  grid:{color:"#293548"},
-  ticks:{
-    color:"#94a3b8",
-    callback:function(value){
 
-      if(value >= 1000000){
-        return (value/1000000).toFixed(1)+"M";
+  x:{
+    grid:{color:"#293548"},
+    ticks:{
+      color:"#94a3b8"
+    }
+  },
+
+  y:{
+    grid:{color:"#293548"},
+    ticks:{
+      color:"#94a3b8",
+
+      callback:function(value){
+
+        if(value >= 1000000){
+          return Math.round(value/1000000) + "M";
+        }
+
+        if(value >= 1000){
+          return Math.round(value/1000) + "K";
+        }
+
+        return value;
       }
-
-      if(value >= 1000){
-        return Math.round(value/1000)+"K";
-      }
-
-      return value;
     }
   }
-}
-,
-      y:{grid:{color:"#293548"},ticks:{color:"#94a3b8"}}}};
+
+};
   charts[id]=new Chart(el,{type,data,options:Object.assign(base,opts||{},{
     plugins:Object.assign({},base.plugins,(opts&&opts.plugins)||{}),
     scales:Object.assign({},base.scales,(opts&&opts.scales)||{})
