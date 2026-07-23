@@ -898,7 +898,58 @@ function renderKPI(){
   });
 };
 
-function renderTable(sheet,key,hasTotal){
+function execRankingTable(rows, valueCol, label){
+
+  if(!rows || !rows.length || valueCol < 0){
+    return `
+      <div class="loading">
+        No ${label} Data
+      </div>
+    `;
+  }
+
+  const topRows = rows.slice(0, 6);
+
+  return `
+    <div class="tbl-wrap">
+      <table class="exec-table">
+
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>${label}</th>
+            <th>Q2 Sales</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${topRows.map((r,i)=>`
+
+            <tr>
+              <td>#${i+1}</td>
+
+              <td>
+                ${r[0]}
+              </td>
+
+              <td class="num">
+                ${Math.round(
+                  num(r[valueCol]) || 0
+                ).toLocaleString("ko-KR")}
+              </td>
+
+            </tr>
+
+          `).join("")}
+
+        </tbody>
+
+      </table>
+    </div>
+  `;
+}
+  function renderTable(sheet,key,hasTotal){
   const d = store[sheet]; if(!d) return;
   const tbl = document.getElementById("tbl-"+key);
   const thead = "<thead><tr>"+d.cols.map((c,i)=>`<th data-ci="${i}">${c}</th>`).join("")+"</tr></thead>";
