@@ -1313,19 +1313,21 @@ function drawChart(id, type, data, opts){
   const baseScales = isPie ? {} : {
 
     x: {
-      grid: {
-        color: "#293548"
-      },
-      ticks: {
-        color: "#94a3b8",
+  grid: {
+    color: "#293548"
+  },
+  ticks: {
+    color: "#94a3b8",
 
-        callback: isHorizontal
-          ? function(value){
-              return moneyAxisLabel(value);
-            }
-          : undefined
-      }
-    },
+    callback: isHorizontal
+      ? function(value){
+          return moneyAxisLabel(value);
+        }
+      : undefined,
+
+    autoSkip: false
+  }
+},
 
     y: {
       grid: {
