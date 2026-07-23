@@ -972,6 +972,72 @@ drawChart("ch_exec_brand_rank", "bar", {
 });
 };
 
+  function execBrandRankingTable(rows){
+
+  const topRows = rows.slice(0,6);
+
+  return `
+    <div class="tbl-wrap">
+
+      <table class="exec-table">
+
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Brand</th>
+            <th>Q2 Sales</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          ${topRows.map((r,i)=>`
+
+            <tr>
+
+              <td>#${i+1}</td>
+
+              <td>
+
+                ${
+                  r.brand === "Gillette Group"
+
+                  ? `Gillette Group
+                     <div style="
+                       font-size:11px;
+                       color:#94a3b8;
+                       margin-top:4px;
+                     ">
+                       Men :
+                       ${(r.gillette||0).toLocaleString("ko-KR")}
+                       <br>
+                       Venus :
+                       ${(r.venus||0).toLocaleString("ko-KR")}
+                     </div>`
+
+                  : r.brand
+                }
+
+              </td>
+
+              <td class="num">
+
+                ${(r.total||0)
+                  .toLocaleString("ko-KR")}
+
+              </td>
+
+            </tr>
+
+          `).join("")}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+}
   function execRankingTable(rows, valueCol, label){
 
   if(!rows || !rows.length || valueCol < 0){
