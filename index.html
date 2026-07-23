@@ -930,21 +930,49 @@ drawChart("ch_exec_brand_rank", "bar", {
 
   labels: topBrands.map(r => r.brand),
 
-  datasets: [{
+  datasets: [
 
-    label: "Q2 Sales",
+    {
+      label: "Gillette",
 
-    data: topBrands.map(r =>
-      r.total || 0
-    ),
+      data: topBrands.map(r =>
+        r.brand === "Gillette Group"
+          ? r.gillette
+          : 0
+      ),
 
-    backgroundColor: topBrands.map(r =>
-      r.brand === "DORCO"
-        ? "#38bdf8"
-        : "#64748b"
-    )
+      backgroundColor: "#64748b"
+    },
 
-  }]
+    {
+      label: "Venus",
+
+      data: topBrands.map(r =>
+        r.brand === "Gillette Group"
+          ? r.venus
+          : 0
+      ),
+
+      backgroundColor: "#94a3b8"
+    },
+
+    {
+      label: "Brand Sales",
+
+      data: topBrands.map(r =>
+        r.brand !== "Gillette Group"
+          ? r.total
+          : 0
+      ),
+
+      backgroundColor: topBrands.map(r =>
+        r.brand === "DORCO"
+          ? "#38bdf8"
+          : "#64748b"
+      )
+    }
+
+  ]
 
 }, {
 
@@ -952,7 +980,16 @@ drawChart("ch_exec_brand_rank", "bar", {
 
   plugins: {
     legend: {
-      display: false
+      display: true
+    }
+  },
+
+  scales: {
+    x: {
+      stacked: true
+    },
+    y: {
+      stacked: true
     }
   }
 
