@@ -1019,8 +1019,17 @@ drawChart("ch_exec_brand_rank", "bar", {
       stacked: true
     },
     y: {
-      stacked: true
+  stacked: true,
+
+  ticks: {
+    callback: function(value){
+      return topBrands[value]
+        ? topBrands[value].brand
+        : "";
     }
+  }
+}
+
   }
 
 });
