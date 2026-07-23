@@ -1296,6 +1296,23 @@ function renderProductCharts(){
 Chart.defaults.color = "#94a3b8";
 Chart.defaults.borderColor = "#334155";
 
+  function drawChart(id, type, data, opts){
+
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  if(charts[id]){
+    charts[id].destroy();
+  }
+
+  charts[id] = new Chart(el,{
+    type:type,
+    data:data,
+    options:opts || {}
+  });
+
+}
+  
 document.querySelectorAll(".navbtn").forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll(".navbtn").forEach(b=>b.classList.remove("active"));
