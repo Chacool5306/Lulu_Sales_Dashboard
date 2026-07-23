@@ -663,10 +663,8 @@ function moneyShort(v){
 function fullMoney(v){
   return Math.round(num(v) || 0).toLocaleString("ko-KR");
 }
-    return Math.round(num(v) || 0).toLocaleString("ko-KR");
-  }
 
-  function pctText(v){
+function pctText(v){
     const x = num(v) || 0;
     return (x * 100).toFixed(1) + "%";
   }
