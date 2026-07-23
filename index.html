@@ -897,31 +897,6 @@ function renderKPI(){
     }
   });
 };
-  const moneyCard=(lbl,v,sub)=>`<div class="card"><div class="lbl">${lbl}</div><div class="val">${fmt(v,"매출")}</div>${sub?`<div class="sub">${sub}</div>`:""}</div>`;
-  const textCard=(lbl,v)=>`<div class="card"><div class="lbl">${lbl}</div><div class="val small">${v??""}</div></div>`;
-  let html="";
-  html+=moneyCard("Q2 2026 총매출", map["Q2 2026 총매출"]);
-  html+=moneyCard("Q1 2026 총매출", map["Q1 2026 총매출"]);
-  html+=growthCard("QoQ 성장률 (Q1→Q2)", map["QoQ 성장률 (Q1→Q2)"]);
-  html+=growthCard("YoY 성장률 (H1)", map["YoY 성장률 (H1)"]);
-  html+=moneyCard("H1 2026 총매출", map["H1 2026 총매출"]);
-  html+=moneyCard("H1 2025 총매출", map["H1 2025 총매출"]);
-  html+=textCard("최대 매출 브랜드", map["최대 매출 브랜드"]);
-  html+=textCard("최대 매출 카테고리", map["최대 매출 카테고리"]);
-  html+=moneyCard("DORCO Q2 2026 매출", map["DORCO Q2 2026 매출"]);
-  html+=growthCard("DORCO QoQ 성장률", map["DORCO QoQ 성장률"]);
-  html+=textCard("DORCO 매출 순위", (map["DORCO 매출 순위"]!=null? map["DORCO 매출 순위"]+"위":""));
-  wrap.innerHTML = html;
-
-  drawChart("ch_kpi_q","bar",{
-    labels:["Q1 2026","Q2 2026"],
-    datasets:[{label:"총매출",data:[num(map["Q1 2026 총매출"]),num(map["Q2 2026 총매출"])],backgroundColor:[CHART_COLORS[1],CHART_COLORS[0]]}]
-  },{plugins:{legend:{display:false}}});
-  drawChart("ch_kpi_h","bar",{
-    labels:["H1 2025","H1 2026"],
-    datasets:[{label:"총매출",data:[num(map["H1 2025 총매출"]),num(map["H1 2026 총매출"])],backgroundColor:[CHART_COLORS[4],CHART_COLORS[2]]}]
-  },{plugins:{legend:{display:false}}});
-}
 
 function renderTable(sheet,key,hasTotal){
   const d = store[sheet]; if(!d) return;
