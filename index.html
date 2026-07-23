@@ -1311,10 +1311,34 @@ Chart.defaults.borderColor = "#334155";
   }
 
   charts[id] = new Chart(el,{
-    type:type,
-    data:data,
-    options:opts || {}
-  });
+  type:type,
+  data:data,
+
+  options:{
+    ...opts,
+
+    plugins:{
+      ...(opts?.plugins || {}),
+
+      tooltip:{
+        callbacks:{
+          label:function(context){
+
+            const value =
+              Number(context.raw || 0);
+
+            return (
+              context.dataset.label +
+              ": $" +
+              Math.round(value)
+                .toLocaleString("ko-KR")
+            );
+          }
+        }
+      }
+    }
+  }
+});
 
 }
   
