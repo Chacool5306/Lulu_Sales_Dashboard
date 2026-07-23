@@ -1066,7 +1066,24 @@ scales: {
 
   function execBrandRankingTable(rows){
 
-  const topRows = rows.slice(0,6);
+  let topRows = rows.slice(0,6);
+
+const luluPB = rows.find(
+  r => String(r.brand).toUpperCase().includes("LULU")
+);
+
+if(
+  luluPB &&
+  !topRows.some(r => r.brand === luluPB.brand)
+){
+  topRows.pop();
+  topRows.push(luluPB);
+
+  topRows.sort(
+    (a,b) => b.total - a.total
+  );
+}
+
 
   return `
     <div class="tbl-wrap">
