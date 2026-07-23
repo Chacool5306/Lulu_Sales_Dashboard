@@ -1270,69 +1270,7 @@ function renderProductCharts(){
 
 Chart.defaults.color = "#94a3b8";
 Chart.defaults.borderColor = "#334155";
-function drawChart(id,type,data,opts){
-  const el=document.getElementById(id); if(!el) return;
-  if(charts[id]) charts[id].destroy();
-  const base={
-  responsive:true,
-  maintainAspectRatio:false,
 
-  plugins:{
-
-    legend:{
-      labels:{color:"#cbd5e1"}
-    },
-
-    tooltip:{
-      callbacks:{
-        label:function(context){
-
-          const value =
-            Number(context.raw || 0);
-
-          return context.dataset.label +
-  ": $" +
-  Math.round(value).toLocaleString("ko-KR");
-        }
-      }
-    }
-
-  },
-    scales:(type==="doughnut"||type==="pie")?{}:{
-
-  x:{
-    grid:{color:"#293548"},
-    ticks:{
-      color:"#94a3b8"
-    }
-  },
-
-  y:{
-    grid:{color:"#293548"},
-    ticks:{
-      color:"#94a3b8",
-
-      callback:function(value){
-
-        if(value >= 1000000){
-          return Math.round(value/1000000) + "M";
-        }
-
-        if(value >= 1000){
-          return Math.round(value/1000) + "K";
-        }
-
-        return value;
-      }
-    }
-  }
-
-};
-  charts[id]=new Chart(el,{type,data,options:Object.assign(base,opts||{},{
-    plugins:Object.assign({},base.plugins,(opts&&opts.plugins)||{}),
-    scales:Object.assign({},base.scales,(opts&&opts.scales)||{})
-  })});
-}
 
 document.querySelectorAll(".navbtn").forEach(btn=>{
   btn.onclick=()=>{
