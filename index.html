@@ -1300,9 +1300,8 @@ function drawChart(id,type,data,opts){
             Number(context.raw || 0);
 
           return context.dataset.label +
-            ": " +
-            Math.round(value)
-              .toLocaleString("ko-KR");
+  ": $" +
+  Math.round(value).toLocaleString("ko-KR");
         }
       }
     }
