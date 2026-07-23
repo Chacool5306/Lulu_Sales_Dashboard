@@ -1265,7 +1265,25 @@ function drawChart(id,type,data,opts){
   const base={responsive:true,maintainAspectRatio:false,
     plugins:{legend:{labels:{color:"#cbd5e1"}}},
     scales:(type==="doughnut"||type==="pie")?{}:{
-      x:{grid:{color:"#293548"},ticks:{color:"#94a3b8"}},
+      x:{
+  grid:{color:"#293548"},
+  ticks:{
+    color:"#94a3b8",
+    callback:function(value){
+
+      if(value >= 1000000){
+        return (value/1000000).toFixed(1)+"M";
+      }
+
+      if(value >= 1000){
+        return Math.round(value/1000)+"K";
+      }
+
+      return value;
+    }
+  }
+}
+``,
       y:{grid:{color:"#293548"},ticks:{color:"#94a3b8"}}}};
   charts[id]=new Chart(el,{type,data,options:Object.assign(base,opts||{},{
     plugins:Object.assign({},base.plugins,(opts&&opts.plugins)||{}),
