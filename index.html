@@ -743,8 +743,10 @@ const executiveBrandRows = [
     .filter(r => r[0])
     .sort((a,b) => num(b[categoryQ2Col]) - num(a[categoryQ2Col]));
 
-  const dorcoRank =
-    sortedBrands.findIndex(r => String(r[0]).toUpperCase() === "DORCO") + 1;
+const dorcoRank =
+  executiveBrandRows.findIndex(
+    r => String(r.brand).toUpperCase() === "DORCO"
+  ) + 1;
 
   const topBrand =
     sortedBrands.length ? sortedBrands[0][0] : safe(getFromKpi("최대 매출 브랜드"), "-");
