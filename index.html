@@ -619,14 +619,284 @@ function renderAll(){
 }
 
 function renderKPI(){
-  const d = store["KPI"]; if(!d) return;
-  const map = {};
-  d.rows.forEach(r=> map[r[0]] = r[1]);
-  const wrap = document.getElementById("kpiCards");
-  const growthCard=(lbl,v)=>{
-    const n=num(v); const cls=n>0?"pos":(n<0?"neg":"");
-    return `<div class="card"><div class="lbl">${lbl}</div><div class="val ${cls}">${n>0?"▲":n<0?"▼":""} ${(n*100).toFixed(1)}%</div></div>`;
-  };
+
+  const kpiData = store["KPI"];
+  const categoryData = store["Category"];
+  const brandData = store["Brand"];
+
+  const section = document.getElementById("view-kpi");
+  if(!section || !kpiData) return;
+
+  function colIndex(data, name){
+    return data && data.cols ? data.cols.indexOf(name) : -1;
+  }
+
+  function getFromKpi(metric){
+    const row = kpiData.rows.find(r => String(r[0]).trim() === metric);
+    return row ? row[1] : null;
+  }
+
+  function metricNumber(metric){
+    return num(getFromKpi(metric)) || 0;
+  }
+
+  function rowsNoTotal(data){
+    if(!data || !data.rows) return [];
+    return data.rows.filter(r => !/Grand Total|총계|합계/i.test(String(r[0])));
+  }
+
+  function moneyShort(v){
+    const x = num(v) || 0;
+    if(Math.abs(x) >= 1000000) return (x / 1000000).toFixed(2) + "M";
+    if(Math.abs(x) >= 1000) return Math.round(x / 1000).toLocaleString("ko-KR") + "K";
+    return Math.round(x).toLocaleString("ko-KR");
+  }
+
+  function fullMoney(v){
+    return Math.round(num(v) || 0).toLocaleString("ko-KR");
+  }
+
+  function pctText(v){
+    const x = num(v) || 0;
+    return (x * 100).toFixed(1) + "%";
+  }
+
+  function growthClass(v){
+    return (num(v) || 0) >= 0 ? "up" : "down";
+  }
+
+  function growthArrow(v){
+    const x = num(v) || 0;
+    return x >= 0 ? "▲" : "▼";
+  }
+
+  function safe(v, fallback){
+    return v !== null && v !== undefined && String(v).trim() !== "" ? v : fallback;
+  }
+
+  const q1Market = metricNumber("Q1 2026 총매출");
+  const q2Market = metricNumber("Q2 2026 총매출");
+  const qoqMarket = metricNumber("QoQ 성장률 (Q1→Q2)");
+  const h1_2025 = metricNumber("H1 2025 총매출");
+  const h1_2026 = metricNumber("H1 2026 총매출");
+  const yoyH1 = metricNumber("YoY 성장률 (H1)");
+
+  const dorcoQ2 = metricNumber("DORCO Q2 2026 매출");
+  const dorcoQoq = metricNumber("DORCO QoQ 성장률");
+
+  const brandRows = rowsNoTotal(brandData);
+  const categoryRows = rowsNoTotal(categoryData);
+
+  const brandQ1Col = colIndex(brandData, "Q1 2026");
+  const brandQ2Col = colIndex(brandData, "Q2 2026");
+  const brandShareCol = colIndex(brandData, "기여도");
+
+  const categoryQ2Col = colIndex(categoryData, "Q2 2026");
+
+  const dorcoBrandRow = brandRows.find(r => String(r[0]).toUpperCase() === "DORCO");
+  const dorcoQ1 = dorcoBrandRow && brandQ1Col >= 0 ? num(dorcoBrandRow[brandQ1Col]) : 0;
+  const dorcoQ2FromBrand = dorcoBrandRow && brandQ2Col >= 0 ? num(dorcoBrandRow[brandQ2Col]) : dorcoQ2;
+  const dorcoShare = dorcoBrandRow && brandShareCol >= 0 ? num(dorcoBrandRow[brandShareCol]) : (q2Market ? dorcoQ2 / q2Market : 0);
+
+  const sortedBrands = [...brandRows]
+    .filter(r => r[0])
+    .sort((a,b) => num(b[brandQ2Col]) - num(a[brandQ2Col]));
+
+  const sortedCategories = [...categoryRows]
+    .filter(r => r[0])
+    .sort((a,b) => num(b[categoryQ2Col]) - num(a[categoryQ2Col]));
+
+  const dorcoRank =
+    sortedBrands.findIndex(r => String(r[0]).toUpperCase() === "DORCO") + 1;
+
+  const topBrand =
+    sortedBrands.length ? sortedBrands[0][0] : safe(getFromKpi("최대 매출 브랜드"), "-");
+
+  const topCategory =
+    sortedCategories.length ? sortedCategories[0][0] : safe(getFromKpi("최대 매출 카테고리"), "-");
+
+  section.innerHTML = `
+    <div class="exec-kpi-grid">
+
+      <div class="exec-kpi">
+        <p class="kpi-name">Q2 Market Sales</p>
+        <div class="kpi-number">${moneyShort(q2Market)}</div>
+        <div class="kpi-note">Q2 2026 Total Sales</div>
+      </div>
+
+      <div class="exec-kpi">
+        <p class="kpi-name">QoQ Growth</p>
+        <div class="kpi-number ${growthClass(qoqMarket)}">
+          ${growthArrow(qoqMarket)} ${pctText(qoqMarket)}
+        </div>
+        <div class="kpi-note">Q1 → Q2 2026</div>
+      </div>
+
+      <div class="exec-kpi">
+        <p class="kpi-name">H1 YoY Growth</p>
+        <div class="kpi-number ${growthClass(yoyH1)}">
+          ${growthArrow(yoyH1)} ${pctText(yoyH1)}
+        </div>
+        <div class="kpi-note">H1 2025 → H1 2026</div>
+      </div>
+
+      <div class="exec-kpi dorco">
+        <p class="kpi-name">DORCO Q2 Sales</p>
+        <div class="kpi-number">${moneyShort(dorcoQ2FromBrand)}</div>
+        <div class="kpi-note">DORCO Brand Sales</div>
+      </div>
+
+      <div class="exec-kpi dorco">
+        <p class="kpi-name">DORCO Share</p>
+        <div class="kpi-number">${pctText(dorcoShare)}</div>
+        <div class="kpi-note">Q2 Sales Contribution</div>
+      </div>
+
+      <div class="exec-kpi dorco">
+        <p class="kpi-name">DORCO Rank</p>
+        <div class="kpi-number">#${dorcoRank || "-"}</div>
+        <div class="kpi-note">Brand Ranking</div>
+      </div>
+
+    </div>
+
+    <div class="exec-summary-panel">
+      <h3>Executive Summary</h3>
+      <ul class="exec-summary-list">
+        <li>Q2 Market Sales는 ${fullMoney(q2Market)}로, 전분기 대비 ${pctText(qoqMarket)} 변동했습니다.</li>
+        <li>H1 기준 시장 매출은 전년 대비 ${pctText(yoyH1)} 변동했습니다.</li>
+        <li>DORCO Q2 Sales는 ${fullMoney(dorcoQ2FromBrand)}이며, 전체 브랜드 중 #${dorcoRank || "-"} 순위입니다.</li>
+        <li>DORCO Share는 ${pctText(dorcoShare)}로, 시장 내 포지션 방어가 핵심입니다.</li>
+        <li>Top Brand는 ${topBrand}이며, Top Category는 ${topCategory}입니다.</li>
+        <li>시장 QoQ(${pctText(qoqMarket)}) 대비 DORCO QoQ(${pctText(dorcoQoq)})를 비교해 DORCO의 상대 성과를 지속 추적해야 합니다.</li>
+      </ul>
+    </div>
+
+    <div class="exec-section-grid">
+
+      <div class="exec-panel">
+        <h3>Market Trend</h3>
+        <p>Q1 2026 → Q2 2026 Total Market Sales</p>
+        <div class="exec-chart">
+          <canvas id="ch_exec_market_trend"></canvas>
+        </div>
+      </div>
+
+      <div class="exec-panel">
+        <h3>DORCO Trend</h3>
+        <p>Q1 2026 → Q2 2026 DORCO Sales</p>
+        <div class="exec-chart">
+          <canvas id="ch_exec_dorco_trend"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="exec-section-grid">
+
+      <div class="exec-panel">
+        <h3>Category Mix</h3>
+        <p>Q2 2026 Sales Contribution by Category</p>
+        <div class="exec-chart">
+          <canvas id="ch_exec_category_mix"></canvas>
+        </div>
+      </div>
+
+      <div class="exec-panel">
+        <h3>Brand Ranking</h3>
+        <p>Top 6 Brands by Q2 2026 Sales</p>
+        <div class="exec-chart">
+          <canvas id="ch_exec_brand_rank"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="exec-table-grid">
+
+      <div class="exec-panel">
+        <h3>Top Categories</h3>
+        <p>Q2 2026 Sales Ranking</p>
+        ${execRankingTable(sortedCategories, categoryQ2Col, "Category")}
+      </div>
+
+      <div class="exec-panel">
+        <h3>Top Brands</h3>
+        <p>Q2 2026 Sales Ranking</p>
+        ${execRankingTable(sortedBrands, brandQ2Col, "Brand")}
+      </div>
+
+    </div>
+  `;
+
+  drawChart("ch_exec_market_trend", "bar", {
+    labels: ["Q1 2026", "Q2 2026"],
+    datasets: [{
+      label: "Market Sales",
+      data: [q1Market, q2Market],
+      backgroundColor: ["#818cf8", "#38bdf8"]
+    }]
+  }, {
+    plugins: {
+      legend: { display: false }
+    }
+  });
+
+  drawChart("ch_exec_dorco_trend", "bar", {
+    labels: ["Q1 2026", "Q2 2026"],
+    datasets: [{
+      label: "DORCO Sales",
+      data: [dorcoQ1, dorcoQ2FromBrand],
+      backgroundColor: ["#7dd3fc", "#0ea5e9"]
+    }]
+  }, {
+    plugins: {
+      legend: { display: false }
+    }
+  });
+
+  drawChart("ch_exec_category_mix", "doughnut", {
+    labels: sortedCategories.map(r => r[0]),
+    datasets: [{
+      data: sortedCategories.map(r => num(r[categoryQ2Col])),
+      backgroundColor: [
+        "#38bdf8",
+        "#818cf8",
+        "#34d399",
+        "#fbbf24",
+        "#f87171",
+        "#f472b6",
+        "#a78bfa"
+      ]
+    }]
+  }, {
+    plugins: {
+      legend: {
+        position: "right",
+        labels: {
+          color: "#cbd5e1",
+          font: { size: 11 }
+        }
+      }
+    }
+  });
+
+  const topBrands = sortedBrands.slice(0, 6);
+
+  drawChart("ch_exec_brand_rank", "bar", {
+    labels: topBrands.map(r => r[0]),
+    datasets: [{
+      label: "Q2 Sales",
+      data: topBrands.map(r => num(r[brandQ2Col])),
+      backgroundColor: "#38bdf8"
+    }]
+  }, {
+    indexAxis: "y",
+    plugins: {
+      legend: { display: false }
+    }
+  });
+};
   const moneyCard=(lbl,v,sub)=>`<div class="card"><div class="lbl">${lbl}</div><div class="val">${fmt(v,"매출")}</div>${sub?`<div class="sub">${sub}</div>`:""}</div>`;
   const textCard=(lbl,v)=>`<div class="card"><div class="lbl">${lbl}</div><div class="val small">${v??""}</div></div>`;
   let html="";
