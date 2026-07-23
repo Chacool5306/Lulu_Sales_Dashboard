@@ -1454,10 +1454,13 @@ function drawChart(id, type, data, opts){
   }
 
   charts[id] = new Chart(el, {
-    type: type,
-    data: data,
-    options: finalOptions
-  });
+  type: type,
+  data: data,
+
+  plugins:[ChartDataLabels],
+
+  options: finalOptions
+});
 
 }
 
