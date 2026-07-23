@@ -701,6 +701,43 @@ function renderKPI(){
   const sortedBrands = [...brandRows]
     .filter(r => r[0])
     .sort((a,b) => num(b[brandQ2Col]) - num(a[brandQ2Col]));
+  // =====================================
+// Gillette + Venus 통합
+// =====================================
+
+const gilletteRow =
+  brandRows.find(r =>
+    String(r[0]).toUpperCase().includes("GILLETTE") &&
+    !String(r[0]).toUpperCase().includes("VENUS")
+  );
+
+const venusRow =
+  brandRows.find(r =>
+    String(r[0]).toUpperCase().includes("VENUS")
+  );
+
+const gilletteGroupSales =
+  (num(gilletteRow?.[brandQ2Col]) || 0) +
+  (num(venusRow?.[brandQ2Col]) || 0);
+
+const executiveBrandRows = [
+  {
+    brand: "Gillette Group",
+    total: gilletteGroupSales,
+    gillette: num(gilletteRow?.[brandQ2Col]) || 0,
+    venus: num(venusRow?.[brandQ2Col]) || 0
+  },
+
+  ...brandRows
+    .filter(r =>
+      !String(r[0]).toUpperCase().includes("GILLETTE")
+    )
+    .map(r => ({
+      brand: r[0],
+      total: num(r[brandQ2Col]) || 0
+    }))
+]
+.sort((a,b) => b.total - a.total);
 
   const sortedCategories = [...categoryRows]
     .filter(r => r[0])
