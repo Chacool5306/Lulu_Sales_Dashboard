@@ -1271,6 +1271,163 @@ function renderProductCharts(){
 Chart.defaults.color = "#94a3b8";
 Chart.defaults.borderColor = "#334155";
 
+function drawChart(id, type, data, opts){
+
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  if(charts[id]){
+    charts[id].destroy();
+  }
+
+  const isPie =
+    type === "doughnut" ||
+    type === "pie";
+
+  const isHorizontal =
+    opts &&
+    opts.indexAxis === "y";
+
+  function moneyAxisLabel(value){
+
+    if(value >= 1000000){
+      return Math.round(value / 1000000) + "M";
+    }
+
+    if(value >= 1000){
+      return Math.round(value / 1000) + "K";
+    }
+
+    return value;
+  }
+
+  function moneyTooltipLabel(context){
+
+    const value = Number(context.raw || 0);
+
+    return context.dataset.label +
+      ": $" +
+      Math.round(value).toLocaleString("ko-KR");
+  }
+
+  const baseScales = isPie ? {} : {
+
+    x: {
+      grid: {
+        color: "#293548"
+      },
+      ticks: {
+        color: "#94a3b8",
+
+        callback: isHorizontal
+          ? function(value){
+              return moneyAxisLabel(value);
+            }
+          : undefined
+      }
+    },
+
+    y: {
+      grid: {
+        color: "#293548"
+      },
+      ticks: {
+        color: "#94a3b8",
+
+        callback: !isHorizontal
+          ? function(value){
+              return moneyAxisLabel(value);
+            }
+          : undefined
+      }
+    }
+
+  };
+
+  const base = {
+    responsive: true,
+    maintainAspectRatio: false,
+
+    plugins: {
+
+      legend: {
+        labels: {
+          color: "#cbd5e1"
+        }
+      },
+
+      tooltip: {
+        callbacks: {
+          label: moneyTooltipLabel
+        }
+      }
+
+    },
+
+    scales: baseScales
+  };
+
+  const finalOptions = Object.assign(
+    {},
+    base,
+    opts || {}
+  );
+
+  finalOptions.plugins = Object.assign(
+    {},
+    base.plugins,
+    (opts && opts.plugins) || {}
+  );
+
+  if(!isPie){
+
+    finalOptions.scales = {
+      x: Object.assign(
+        {},
+        baseScales.x,
+        (opts && opts.scales && opts.scales.x) || {}
+      ),
+
+      y: Object.assign(
+        {},
+        baseScales.y,
+        (opts && opts.scales && opts.scales.y) || {}
+      )
+    };
+
+    finalOptions.scales.x.grid = Object.assign(
+      {},
+      baseScales.x.grid,
+      (opts && opts.scales && opts.scales.x && opts.scales.x.grid) || {}
+    );
+
+    finalOptions.scales.x.ticks = Object.assign(
+      {},
+      baseScales.x.ticks,
+      (opts && opts.scales && opts.scales.x && opts.scales.x.ticks) || {}
+    );
+
+    finalOptions.scales.y.grid = Object.assign(
+      {},
+      baseScales.y.grid,
+      (opts && opts.scales && opts.scales.y && opts.scales.y.grid) || {}
+    );
+
+    finalOptions.scales.y.ticks = Object.assign(
+      {},
+      baseScales.y.ticks,
+      (opts && opts.scales && opts.scales.y && opts.scales.y.ticks) || {}
+    );
+
+  }
+
+  charts[id] = new Chart(el, {
+    type: type,
+    data: data,
+    options: finalOptions
+  });
+
+}
 
 document.querySelectorAll(".navbtn").forEach(btn=>{
   btn.onclick=()=>{
