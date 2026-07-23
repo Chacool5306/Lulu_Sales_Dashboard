@@ -646,25 +646,25 @@ function renderKPI(){
   }
 
 function moneyShort(v){
-2
+
 const x = num(v) || 0;
-3
+
  
-4
+
 if(Math.abs(x) >= 1000000)
-5
+
 return (x / 1000000).toFixed(2) + "M";
-6
+
  
-7
+
 if(Math.abs(x) >= 1000)
-8
+
 return Math.round(x / 1000).toLocaleString("ko-KR") + "K";
-9
+
  
-10
+
 return Math.round(x).toLocaleString("ko-KR");
-11
+
 }
 
   function fullMoney(v){
