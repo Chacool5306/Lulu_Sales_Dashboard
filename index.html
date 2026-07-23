@@ -1062,10 +1062,10 @@ drawChart("ch_exec_brand_rank", "bar", {
 
               <td class="num">
 
-                ${(r.total||0)
-                  .toLocaleString("ko-KR")}
+  ${Math.round(r.total || 0)
+      .toLocaleString("ko-KR")}
 
-              </td>
+</td>
 
             </tr>
 
