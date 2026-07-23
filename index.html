@@ -861,11 +861,12 @@ const dorcoRank =
         ${execRankingTable(sortedCategories, categoryQ2Col, "Category")}
       </div>
 
-      <div class="exec-panel">
-        <h3>Top Brands</h3>
-        <p>Q2 2026 Sales Ranking</p>
-        ${execRankingTable(sortedBrands, brandQ2Col, "Brand")}
-      </div>
+<div class="exec-panel">
+  <h3>Top Brands</h3>
+  <p>Q2 2026 Sales Ranking</p>
+
+  ${execBrandRankingTable(executiveBrandRows)}
+</div>
 
     </div>
   `;
