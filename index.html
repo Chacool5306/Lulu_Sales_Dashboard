@@ -930,25 +930,40 @@ drawChart("ch_exec_brand_rank", "bar", {
 
   labels: topBrands.map(r => r.brand),
 
-  datasets: [
+datasets: [
 
-    {
-      label: "Gillette Men",
-      data: topBrands.map(r =>
-        r.gillette ? r.gillette : r.total
-      ),
-      backgroundColor: "#38bdf8"
-    },
+  {
+    label: "Gillette Men",
+    data: topBrands.map(r =>
+      r.brand === "Gillette Group"
+        ? r.gillette
+        : 0
+    ),
+    backgroundColor: "#38bdf8"
+  },
 
-    {
-      label: "Venus",
-      data: topBrands.map(r =>
-        r.venus ? r.venus : 0
-      ),
-      backgroundColor: "#93c5fd"
-    }
+  {
+    label: "Venus",
+    data: topBrands.map(r =>
+      r.brand === "Gillette Group"
+        ? r.venus
+        : 0
+    ),
+    backgroundColor: "#93c5fd"
+  },
 
-  ]
+  {
+    label: "Other Brands",
+    data: topBrands.map(r =>
+      r.brand !== "Gillette Group"
+        ? r.total
+        : 0
+    ),
+    backgroundColor: "#34d399"
+  }
+
+]
+`
 
 }, {
 
