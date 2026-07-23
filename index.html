@@ -964,8 +964,24 @@ const dorcoRank =
 
 });
 
-const topBrands =
+const luluPB = executiveBrandRows.find(
+  r => String(r.brand).toUpperCase().includes("LULU")
+);
+
+let topBrands =
   executiveBrandRows.slice(0, 6);
+
+if(
+  luluPB &&
+  !topBrands.some(r => r.brand === luluPB.brand)
+){
+  topBrands.pop();
+  topBrands.push(luluPB);
+
+  topBrands.sort(
+    (a,b) => b.total - a.total
+  );
+}
 
 drawChart("ch_exec_brand_rank", "bar", {
 
