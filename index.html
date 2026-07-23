@@ -930,24 +930,21 @@ drawChart("ch_exec_brand_rank", "bar", {
 
   labels: topBrands.map(r => r.brand),
 
-datasets: [
+  datasets: [{
 
-  {
-    label: "Gillette Men",
-    ...
-  },
+    label: "Q2 Sales",
 
-  {
-    label: "Venus",
-    ...
-  },
+    data: topBrands.map(r =>
+      r.total || 0
+    ),
 
-  {
-    label: "Other Brands",
-    ...
-  }
+    backgroundColor: topBrands.map(r =>
+      r.brand === "DORCO"
+        ? "#38bdf8"
+        : "#64748b"
+    )
 
-]
+  }]
 
 }, {
 
@@ -955,20 +952,12 @@ datasets: [
 
   plugins: {
     legend: {
-      display: true
-    }
-  },
-
-  scales: {
-    x: {
-      stacked: true
-    },
-    y: {
-      stacked: true
+      display: false
     }
   }
 
 });
+``
 };
 
   function execBrandRankingTable(rows){
