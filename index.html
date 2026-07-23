@@ -994,7 +994,7 @@ drawChart("ch_exec_brand_rank", "bar", {
   }
 
 });
-``
+
 };
 
   function execBrandRankingTable(rows){
@@ -1283,7 +1283,7 @@ function drawChart(id,type,data,opts){
     }
   }
 }
-``,
+,
       y:{grid:{color:"#293548"},ticks:{color:"#94a3b8"}}}};
   charts[id]=new Chart(el,{type,data,options:Object.assign(base,opts||{},{
     plugins:Object.assign({},base.plugins,(opts&&opts.plugins)||{}),
