@@ -645,12 +645,20 @@ function renderKPI(){
     return data.rows.filter(r => !/Grand Total|총계|합계/i.test(String(r[0])));
   }
 
-  function moneyShort(v){
-    const x = num(v) || 0;
-    if(Math.abs(x) >= 1000000) return (x / 1000000).toFixed(2) + "M";
-    if(Math.abs(x) >= 1000) return Math.round(x / 1000).toLocaleString("ko-KR") + "K";
-    return Math.round(x).toLocaleString("ko-KR");
+function moneyShort(v){
+
+  const x = num(v) || 0;
+
+  if(x >= 1000000){
+    return Math.round(x/1000000) + "M";
   }
+
+  if(x >= 1000){
+    return Math.round(x/1000) + "K";
+  }
+
+  return Math.round(x).toLocaleString("ko-KR");
+}
 
   function fullMoney(v){
     return Math.round(num(v) || 0).toLocaleString("ko-KR");
