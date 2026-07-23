@@ -905,17 +905,27 @@ const dorcoRank =
 });
 
   drawChart("ch_exec_dorco_trend", "bar", {
-    labels: ["Q1 2026", "Q2 2026"],
-    datasets: [{
-      label: "DORCO Sales",
-      data: [dorcoQ1, dorcoQ2FromBrand],
-      backgroundColor: ["#7dd3fc", "#0ea5e9"]
-    }]
-  }, {
-    plugins: {
-      legend: { display: false }
+  labels: ["Q1 2026", "Q2 2026"],
+  datasets: [{
+    label: "DORCO Sales",
+    data: [dorcoQ1, dorcoQ2FromBrand],
+    backgroundColor: ["#7dd3fc", "#0ea5e9"]
+  }]
+}, {
+  plugins: {
+    legend: { display: false }
+  },
+
+  scales: {
+    x: {
+      ticks: {
+        callback: function(value){
+          return ["Q1 2026","Q2 2026"][value];
+        }
+      }
     }
-  });
+  }
+});
 
   drawChart("ch_exec_category_mix", "doughnut", {
     labels: sortedCategories.map(r => r[0]),
