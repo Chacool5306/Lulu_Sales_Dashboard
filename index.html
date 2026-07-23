@@ -93,6 +93,107 @@
     #main{margin-left:0;}
     #hamb{display:block;}
   }
+/* ====================== SIMPLE PASSWORD GATE ====================== */
+body.locked {
+  overflow: hidden;
+}
+
+body.locked #sidebar,
+body.locked #main {
+  display: none;
+}
+
+#authScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top left, rgba(56,189,248,.18), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(129,140,248,.18), transparent 30%),
+    #0f172a;
+  padding: 24px;
+}
+
+#authBox {
+  width: 100%;
+  max-width: 420px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+}
+
+#authBox h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+  color: #fff;
+}
+
+#authBox p {
+  margin: 0 0 22px;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+#authPassword {
+  width: 100%;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  padding: 13px 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+}
+
+#authPassword:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56,189,248,.15);
+}
+
+#authButton {
+  width: 100%;
+  margin-top: 14px;
+  background: #38bdf8;
+  color: #04202e;
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#authButton:hover {
+  filter: brightness(1.08);
+}
+
+#authError {
+  margin-top: 10px;
+  min-height: 18px;
+  color: #f87171;
+  font-size: 12px;
+}
+
+#logout {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#logout:hover {
+  color: #fff;
+  border-color: #38bdf8;
+}
 </style>
 </head>
 <body class="locked">
