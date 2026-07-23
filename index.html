@@ -1453,8 +1453,9 @@ function drawChart(id, type, data, opts){
   type: type,
   data: data,
 
-  plugins:[ChartDataLabels],
-
+  charts[id] = new Chart(el, {
+  type: type,
+  data: data,
   options: finalOptions
 });
 
