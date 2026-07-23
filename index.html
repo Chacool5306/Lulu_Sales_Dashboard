@@ -882,17 +882,27 @@ const dorcoRank =
   `;
 
   drawChart("ch_exec_market_trend", "bar", {
-    labels: ["Q1 2026", "Q2 2026"],
-    datasets: [{
-      label: "Market Sales",
-      data: [q1Market, q2Market],
-      backgroundColor: ["#818cf8", "#38bdf8"]
-    }]
-  }, {
-    plugins: {
-      legend: { display: false }
+  labels: ["Q1 2026", "Q2 2026"],
+  datasets: [{
+    label: "Market Sales",
+    data: [q1Market, q2Market],
+    backgroundColor: ["#818cf8", "#38bdf8"]
+  }]
+}, {
+  plugins: {
+    legend: { display: false }
+  },
+
+  scales: {
+    x: {
+      ticks: {
+        callback: function(value){
+          return ["Q1 2026","Q2 2026"][value];
+        }
+      }
     }
-  });
+  }
+});
 
   drawChart("ch_exec_dorco_trend", "bar", {
     labels: ["Q1 2026", "Q2 2026"],
